@@ -1,6 +1,5 @@
 
 const express = require('express');
-require('dotenv').config();
 const { GoogleGenerativeAI } = require('@google/generative-ai');
 
 const app = express();
@@ -8,7 +7,9 @@ const port = 3001;
 
 app.use(express.json());
 
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+// Directly use the API key (for testing purposes only - DO NOT DO THIS IN PRODUCTION)
+const GEMINI_API_KEY = 'AIzaSyC6nmlR4fkXP3p517mpV8cPnpcy25S1jAQ';
+const genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
 
 app.post('/api/ai', async (req, res) => {
   try {

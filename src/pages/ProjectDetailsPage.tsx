@@ -56,7 +56,7 @@ const ProjectDetailsPage: React.FC = () => {
     
     setIsGeneratingRepo(true);
     try {
-      const structure = await generateGitHubStructure(project.id);
+      const structure = await generateGitHubStructure(project);
       setRepoStructure(structure);
       setProject({ ...project, repoStructure: structure });
       setCurrentProject({ ...project, repoStructure: structure });

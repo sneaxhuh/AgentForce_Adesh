@@ -144,7 +144,13 @@ const CoursePage = () => {
             <div className="space-y-6 text-gray-700 dark:text-gray-300">
               <div>
                 <h3 className="font-semibold text-lg mb-2 flex items-center"><ClipboardList className="w-5 h-5 mr-2" /> Suggested Study Plan:</h3>
-                <p>{aiRecommendations.studyPlan}</p>
+                <ul className="list-disc list-inside space-y-2">
+                  {aiRecommendations.studyPlan.split('Week ').filter(Boolean).map((week, idx) => (
+                    <li key={idx} className="text-gray-700 dark:text-gray-300">
+                      <span className="font-medium">Week {week.split(':')[0]}:</span> {week.split(':').slice(1).join(':').trim()}
+                    </li>
+                  ))}
+                </ul>
               </div>
               {aiRecommendations.certifications.length > 0 && (
                 <div>

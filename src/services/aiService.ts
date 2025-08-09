@@ -35,11 +35,11 @@ export const generateSemesterPlan = async (userData: UserProfile): Promise<Semes
     - "courses": array of objects with "title" (string), "link" (string, use "#" as a placeholder),
       "description" (string, a detailed course syllabus/summary),
       "learningObjectives" (array of strings, what the student should gain),
-      "prerequisites" (array of strings, required prior knowledge),
-      "recommendedResources" (array of objects with "type" (string, e.g., "Book", "Article", "Video"), "title" (string), "link" (string, provide actual, relevant, and functional links, not placeholders))
-    - "certifications": array of objects with "title" (string), "platform" (string), and "difficulty" (string)
-    - "projects": array of objects with "id" (string), "title" (string), "description" (string), "difficulty" (string), "semester" (number), and "steps" (array of strings)
-    - "researchPapers": array of objects with "title" (string), "link" (string, use "#" as a placeholder), and "abstract" (string)
+      "prerequisites" (array of strings, required prior knowledge, provide at least one if applicable),
+      "recommendedResources" (array of objects with "type" (string, e.g., "Book", "Article", "Video"), "title" (string), "link" (string, provide actual, relevant, and functional links, not placeholders), provide at least 2 resources)
+    - "certifications": array of objects with "title" (string), "platform" (string), "difficulty" (string), and "link" (string, provide actual, relevant, and functional links)
+    - "projects": array of objects with "id" (string), "title" (string), "description" (string), "difficulty" (string), "semester" (number), and "steps" (array of strings, provide detailed and actionable implementation steps, e.g., for a website: "Set up project structure", "Design UI mockups", "Implement frontend components", "Develop backend API", "Integrate frontend and backend", "Deploy to hosting").
+    - "researchPapers": array of objects with "title" (string), "link" (string, provide actual, relevant, and functional links), and "abstract" (string, provide a concise summary). Ensure this array is populated with relevant research papers.
 
     Example of a single semester object:
     {
@@ -54,7 +54,7 @@ export const generateSemesterPlan = async (userData: UserProfile): Promise<Semes
             "Develop problem-solving skills using algorithms",
             "Familiarize with data structures and their applications"
           ],
-          "prerequisites": ["Basic math skills"],
+          "prerequisites": ["Basic math skills", "High school algebra"],
           "recommendedResources": [
             { "type": "Book", "title": "Introduction to Algorithms", "link": "https://www.amazon.com/Introduction-Algorithms-Thomas-Cormen/dp/0262033844" },
             { "type": "Video", "title": "MIT OpenCourseWare - Introduction to Computer Science and Programming in Python", "link": "https://www.youtube.com/playlist?list=PLUl4u3cNGP63WbdFxL8G_r_B_Q_Jt1P7" }
@@ -62,7 +62,7 @@ export const generateSemesterPlan = async (userData: UserProfile): Promise<Semes
         }
       ],
       "certifications": [
-        { "title": "Python for Everybody", "platform": "Coursera", "difficulty": "Beginner" }
+        { "title": "Python for Everybody", "platform": "Coursera", "difficulty": "Beginner", "link": "https://www.coursera.org/specializations/python" }
       ],
       "projects": [
         {
@@ -71,10 +71,25 @@ export const generateSemesterPlan = async (userData: UserProfile): Promise<Semes
           "description": "Create a personal portfolio website to showcase your skills and projects.",
           "difficulty": "Easy",
           "semester": 1,
-          "steps": ["Plan the layout", "Write the HTML and CSS", "Add JavaScript for interactivity", "Deploy the website"]
+          "steps": [
+            "Step 1: Define project scope and features (e.g., sections, content, target audience).",
+            "Step 2: Choose a technology stack (e.g., React, Vue, plain HTML/CSS/JS).",
+            "Step 3: Design wireframes and mockups for key pages (e.g., home, about, projects, contact).",
+            "Step 4: Set up the project environment and version control (e.g., Git, GitHub).",
+            "Step 5: Develop the core HTML structure and apply basic CSS styling.",
+            "Step 6: Implement responsive design for various screen sizes (mobile, tablet, desktop).",
+            "Step 7: Add interactive elements using JavaScript (e.g., form validation, animations).",
+            "Step 8: Populate content for each section (e.g., project descriptions, skills, bio).",
+            "Step 9: Optimize images and assets for web performance.",
+            "Step 10: Test the website across different browsers and devices.",
+            "Step 11: Deploy the website to a hosting service (e.g., Netlify, Vercel, GitHub Pages).",
+            "Step 12: Set up analytics and monitor website performance."
+          ]
         }
       ],
-      "researchPapers": []
+      "researchPapers": [
+        { "title": "Attention Is All You Need", "link": "https://arxiv.org/abs/1706.03762", "abstract": "The dominant sequence transduction models are based on complex recurrent or convolutional neural networks that include an encoder and a decoder. The best performing models also connect the encoder and decoder through an attention mechanism. We propose a new simple network architecture, the Transformer, based solely on attention mechanisms, eschewing recurrence and convolutions entirely. Experiments on two machine translation tasks show these models to be superior in quality while being more parallelizable and requiring significantly less time to train. Our model achieves 28.4 BLEU on the WMT 2014 English-to-German translation task, improving over the existing best results by over 2 BLEU, including ensembles. On the WMT 2014 English-to-French translation task, our model establishes a new single-model state-of-the-art BLEU score of 41.8 after training for 3.5 days on eight GPUs, a small fraction of the training cost of the best models from the literature. We show that the Transformer generalizes well to other tasks by applying it to English constituency parsing, both with large and limited training data." }
+      ]
     }
   `;
   const response = await callAIApi(prompt);
@@ -98,14 +113,30 @@ export const generateProjectDetails = async (projectId: string): Promise<Project
   return JSON.parse(response);
 };
 
-export const generateGitHubStructure = async (projectId: string): Promise<{
-  folders: string[];
-  files: { name: string; content: string }[];
-}> => {
-  const prompt = `Generate a GitHub repository structure for a project with ID ${projectId}.`;
-  const response = await callAIApi(prompt);
-  return JSON.parse(response);
-};
+export const generateGitHubStructure = async (project: Project): Promise<{ folders: string[]; files: { name: string; content: string; }[]; }> => { const prompt = `
+    Generate a GitHub repository structure for a project with the following details:
+    Title: ${project.title}
+    Description: ${project.description}
+    Difficulty: ${project.difficulty}
+    Implementation Steps: ${project.steps.join('\n- ')}
+
+    The output MUST be a valid JSON object. Do not include any other text or markdown.
+    The object must have the following properties:
+    - "folders": array of strings (e.g., ["src/components", "src/pages"])
+    - "files": array of objects with "name" (string) and "content" (string, can be empty for placeholder files).
+
+    Example:
+    {
+      "folders": [
+        "src/components",
+        "src/pages"
+      ],
+      "files": [
+        { "name": "README.md", "content": "# My Project" },
+        { "name": "src/App.tsx", "content": "import React from 'react';\n\nfunction App() { return <div>Hello</div>; }\n\nexport default App;" }
+      ]
+    }
+  `; const response = await callAIApi(prompt); try { const jsonMatch = response.match(/```json\n([\s\S]*?)\n```/); if (jsonMatch && jsonMatch[1]) { return JSON.parse(jsonMatch[1]); } return JSON.parse(response); } catch (error) { console.error("Failed to parse GitHub structure response:", response); throw error; } };
 
 export const generateNotesSuggestions = async (notesText: string): Promise<string[]> => {
   const prompt = `Generate suggestions for the following notes: ${notesText}`;
@@ -135,14 +166,14 @@ export const generateCourseRecommendations = async (courseTitle: string, courseD
     The output MUST be a valid JSON object. Do not include any other text or markdown.
     The object must have the following properties:
     - "studyPlan": string (a suggested study plan for this course)
-    - "certifications": array of objects with "title" (string), "platform" (string), and "link" (string)
+    - "certifications": array of objects with "title" (string), "platform" (string), and "link" (string, provide actual, relevant, and functional links)
     - "projectIdeas": array of objects with "title" (string) and "description" (string)
 
     Example:
     {
       "studyPlan": "Week 1: Introduction to CS, Binary. Week 2: C Programming basics.",
       "certifications": [
-        { "title": "Python for Everybody", "platform": "Coursera", "link": "#" }
+        { "title": "Python for Everybody", "platform": "Coursera", "link": "https://www.coursera.org/specializations/python" }
       ],
       "projectIdeas": [
         { "title": "Build a simple web server", "description": "Create a basic HTTP server." }

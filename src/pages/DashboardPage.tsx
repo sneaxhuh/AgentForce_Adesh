@@ -120,6 +120,8 @@ const DashboardPage: React.FC = () => {
         </button>
       </motion.div>
 
+      
+
       {/* Loading State */}
       {isGenerating && (
         <motion.div
