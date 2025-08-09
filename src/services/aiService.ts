@@ -1,5 +1,14 @@
 import { UserProfile, SemesterPlan, Project, Note } from '../contexts/AppContext';
 
+interface Course {
+  title: string;
+  link: string;
+  description?: string;
+  learningObjectives?: string[];
+  prerequisites?: string[];
+  recommendedResources?: { type: string; title: string; link: string }[];
+}
+
 const callAIApi = async (prompt: string) => {
   const response = await fetch('/api/ai', {
     method: 'POST',
@@ -23,7 +32,11 @@ export const generateSemesterPlan = async (userData: UserProfile): Promise<Semes
     The output MUST be a valid JSON array of objects. Do not include any other text or markdown.
     Each object in the array represents a semester and must have the following properties:
     - "semester": number
-    - "courses": array of objects with "title" (string) and "link" (string, use "#" as a placeholder)
+    - "courses": array of objects with "title" (string), "link" (string, use "#" as a placeholder),
+      "description" (string, a detailed course syllabus/summary),
+      "learningObjectives" (array of strings, what the student should gain),
+      "prerequisites" (array of strings, required prior knowledge),
+      "recommendedResources" (array of objects with "type" (string, e.g., "Book", "Article", "Video"), "title" (string), "link" (string, provide actual, relevant, and functional links, not placeholders))
     - "certifications": array of objects with "title" (string), "platform" (string), and "difficulty" (string)
     - "projects": array of objects with "id" (string), "title" (string), "description" (string), "difficulty" (string), "semester" (number), and "steps" (array of strings)
     - "researchPapers": array of objects with "title" (string), "link" (string, use "#" as a placeholder), and "abstract" (string)
@@ -32,8 +45,21 @@ export const generateSemesterPlan = async (userData: UserProfile): Promise<Semes
     {
       "semester": 1,
       "courses": [
-        { "title": "Introduction to Computer Science", "link": "#" },
-        { "title": "Calculus I", "link": "#" }
+        {
+          "title": "Introduction to Computer Science",
+          "link": "#",
+          "description": "This course provides a broad introduction to the field of computer science, covering fundamental concepts of computation, algorithms, and programming.",
+          "learningObjectives": [
+            "Understand basic programming constructs",
+            "Develop problem-solving skills using algorithms",
+            "Familiarize with data structures and their applications"
+          ],
+          "prerequisites": ["Basic math skills"],
+          "recommendedResources": [
+            { "type": "Book", "title": "Introduction to Algorithms", "link": "https://www.amazon.com/Introduction-Algorithms-Thomas-Cormen/dp/0262033844" },
+            { "type": "Video", "title": "MIT OpenCourseWare - Introduction to Computer Science and Programming in Python", "link": "https://www.youtube.com/playlist?list=PLUl4u3cNGP63WbdFxL8G_r_B_Q_Jt1P7" }
+          ]
+        }
       ],
       "certifications": [
         { "title": "Python for Everybody", "platform": "Coursera", "difficulty": "Beginner" }
@@ -64,6 +90,7 @@ export const generateSemesterPlan = async (userData: UserProfile): Promise<Semes
     throw error;
   }
 };
+
 
 export const generateProjectDetails = async (projectId: string): Promise<Project> => {
   const prompt = `Generate detailed project information for a project with ID ${projectId}.`;
@@ -96,4 +123,41 @@ export const generateProgressNudge = async (userData: UserProfile): Promise<stri
   const prompt = `Generate a motivational nudge for a ${userData.academicLevel} student.`;
   const response = await callAIApi(prompt);
   return response;
+};
+
+export const generateCourseRecommendations = async (courseTitle: string, courseDescription?: string): Promise<{
+  studyPlan: string;
+  certifications: { title: string; platform: string; link: string }[];
+  projectIdeas: { title: string; description: string }[];
+}> => {
+  const prompt = `
+    Generate AI recommendations for the course titled "${courseTitle}"${courseDescription ? ` with the following description: "${courseDescription}"` : ``}.
+    The output MUST be a valid JSON object. Do not include any other text or markdown.
+    The object must have the following properties:
+    - "studyPlan": string (a suggested study plan for this course)
+    - "certifications": array of objects with "title" (string), "platform" (string), and "link" (string)
+    - "projectIdeas": array of objects with "title" (string) and "description" (string)
+
+    Example:
+    {
+      "studyPlan": "Week 1: Introduction to CS, Binary. Week 2: C Programming basics.",
+      "certifications": [
+        { "title": "Python for Everybody", "platform": "Coursera", "link": "#" }
+      ],
+      "projectIdeas": [
+        { "title": "Build a simple web server", "description": "Create a basic HTTP server." }
+      ]
+    }
+  `;
+  const response = await callAIApi(prompt);
+  try {
+    const jsonMatch = response.match(/```json\n([\s\S]*?)\n```/);
+    if (jsonMatch && jsonMatch[1]) {
+      return JSON.parse(jsonMatch[1]);
+    }
+    return JSON.parse(response);
+  } catch (error) {
+    console.error("Failed to parse course recommendations response:", response);
+    throw error;
+  }
 };

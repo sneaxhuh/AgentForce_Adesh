@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useAppContext } from '../contexts/AppContext';
+import { useAppContext, Project, SemesterPlan } from '../contexts/AppContext';
 import { generateSemesterPlan } from '../services/aiService';
 import {
   BookOpen,
@@ -23,6 +23,20 @@ const DashboardPage: React.FC = () => {
   const [isGenerating, setIsGenerating] = useState(false);
   const [isInitialLoad, setIsInitialLoad] = useState(true);
 
+  const generatePlan = useCallback(async () => {
+    if (!userProfile.name) return;
+
+    setIsGenerating(true);
+    try {
+      const plans = await generateSemesterPlan(userProfile);
+      setSemesterPlans(plans);
+    } catch (error) {
+      console.error('Failed to generate plan:', error);
+    } finally {
+      setIsGenerating(false);
+    }
+  }, [userProfile, setSemesterPlans]);
+
   useEffect(() => {
     if (!userProfile.name) {
       navigate('/');
@@ -33,25 +47,15 @@ const DashboardPage: React.FC = () => {
       generatePlan();
     }
     setIsInitialLoad(false);
-  }, [userProfile, semesterPlans.length, navigate, isInitialLoad]);
+  }, [userProfile.name, semesterPlans.length, navigate, isInitialLoad, generatePlan]);
 
-  const generatePlan = async () => {
-    if (!userProfile.name) return;
-    
-    setIsGenerating(true);
-    try {
-      const plans = await generateSemesterPlan(userProfile);
-      setSemesterPlans(plans);
-    } catch (error) {
-      console.error('Failed to generate plan:', error);
-    } finally {
-      setIsGenerating(false);
-    }
-  };
-
-  const handleProjectClick = (project: any) => {
+  const handleProjectClick = (project: Project) => {
     setCurrentProject(project);
     navigate('/project-details');
+  };
+
+  const handleCourseClick = (course: SemesterPlan['courses'][0]) => {
+    navigate('/course', { state: { course } });
   };
 
   if (!userProfile.name) {
@@ -168,10 +172,11 @@ const DashboardPage: React.FC = () => {
                       {plan.courses.map((course, idx) => (
                         <div
                           key={idx}
-                          className="flex items-center justify-between p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg"
+                          onClick={() => handleCourseClick(course)}
+                          className="flex items-center justify-between p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg cursor-pointer hover:bg-blue-100 dark:hover:bg-blue-900/30 transition-colors group"
                         >
                           <span className="font-medium text-gray-900 dark:text-white">{course.title}</span>
-                          <ExternalLink size={16} className="text-blue-600 dark:text-blue-400 hover:text-blue-800 cursor-pointer" />
+                          <ChevronRight size={16} className="text-blue-600 dark:text-blue-400 group-hover:translate-x-1 transition-transform" />
                         </div>
                       ))}
                     </div>

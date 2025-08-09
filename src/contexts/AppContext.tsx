@@ -24,7 +24,14 @@ export interface Project {
 
 export interface SemesterPlan {
   semester: number;
-  courses: { title: string; link: string }[];
+  courses: {
+    title: string;
+    link: string;
+    description?: string;
+    learningObjectives?: string[];
+    prerequisites?: string[];
+    recommendedResources?: { type: string; title: string; link: string }[];
+  }[];
   certifications: { title: string; platform: string; difficulty: string }[];
   projects: Project[];
   researchPapers: { title: string; link: string; abstract: string }[];

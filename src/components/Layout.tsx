@@ -2,8 +2,6 @@ import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { useAppContext } from '../contexts/AppContext';
 import {
-  BookOpen,
-  Target,
   Calendar,
   BarChart3,
   FileText,
