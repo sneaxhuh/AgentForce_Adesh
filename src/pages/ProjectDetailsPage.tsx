@@ -22,7 +22,7 @@ import { motion } from 'framer-motion';
 
 const ProjectDetailsPage: React.FC = () => {
   const navigate = useNavigate();
-  const { currentProject, setCurrentProject } = useAppContext();
+  const { currentProject, setCurrentProject, semesterPlans, setSemesterPlans } = useAppContext();
   const [project, setProject] = useState(currentProject);
   const [isGeneratingDetails, setIsGeneratingDetails] = useState(false);
   const [isGeneratingRepo, setIsGeneratingRepo] = useState(false);
@@ -175,6 +175,26 @@ const ProjectDetailsPage: React.FC = () => {
                   <p className="text-sm text-purple-200">Progress</p>
                   <p className="font-semibold">{completionPercentage.toFixed(0)}% Complete</p>
                 </div>
+              </div>
+              <div className="flex items-center space-x-3">
+                <input
+                  type="checkbox"
+                  checked={project.completed}
+                  onChange={(e) => {
+                    const updatedPlans = semesterPlans.map(plan => ({
+                      ...plan,
+                      projects: plan.projects.map(p => 
+                        p.id === project.id ? { ...p, completed: e.target.checked } : p
+                      )
+                    }));
+                    setSemesterPlans(updatedPlans);
+                    setProject({ ...project, completed: e.target.checked });
+                  }}
+                  className="h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                />
+                <label className="ml-2 text-white">
+                  {project.completed ? 'Completed' : 'Mark as Complete'}
+                </label>
               </div>
             </div>
           </div>

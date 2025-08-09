@@ -10,7 +10,7 @@ interface Course {
 }
 
 const callAIApi = async (prompt: string) => {
-  const response = await fetch('/api/ai', {
+  const response = await fetch('http://localhost:3002/api/ai', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -27,8 +27,28 @@ const callAIApi = async (prompt: string) => {
 };
 
 export const generateSemesterPlan = async (userData: UserProfile): Promise<SemesterPlan[]> => {
+  let numSemesters: number;
+  switch (userData.academicLevel) {
+    case 'undergrad':
+      numSemesters = 8; // 4 years * 2 semesters/year
+      break;
+    case 'masters':
+      numSemesters = 4; // 2 years * 2 semesters/year
+      break;
+    case 'phd':
+      numSemesters = 10; // 5 years * 2 semesters/year (can vary, but a reasonable default)
+      break;
+    default:
+      numSemesters = 8; // Default for unknown academic levels
+  }
+
   const prompt = `
-    Generate a semester plan for a ${userData.academicLevel} student interested in ${userData.interests.join(', ')}.
+    Generate a semester plan for a ${userData.academicLevel} student with the following profile:
+    - Career Goals: ${userData.careerGoals}
+    - Current Skills: ${userData.currentSkills}
+    - Interests: ${userData.interests.join(', ')}
+
+    The plan should cover exactly ${numSemesters} semesters.
     The output MUST be a valid JSON array of objects. Do not include any other text or markdown.
     Each object in the array represents a semester and must have the following properties:
     - "semester": number
@@ -36,8 +56,8 @@ export const generateSemesterPlan = async (userData: UserProfile): Promise<Semes
       "description" (string, a detailed course syllabus/summary),
       "learningObjectives" (array of strings, what the student should gain),
       "prerequisites" (array of strings, required prior knowledge, provide at least one if applicable),
-      "recommendedResources" (array of objects with "type" (string, e.g., "Book", "Article", "Video"), "title" (string), "link" (string, provide actual, relevant, and functional links, not placeholders), provide at least 2 resources)
-    - "certifications": array of objects with "title" (string), "platform" (string), "difficulty" (string), and "link" (string, provide actual, relevant, and functional links)
+      "recommendedResources" (array of objects with "type" (string, e.g., "Book", "Article", "Video"), "title" (string), "link" (string, provide actual, relevant, and functional links, not placeholders), provide at least 2 resources). Each semester must have at least 2 courses.
+    - "certifications": array of objects with "title" (string), "platform" (string), "difficulty" (string), and "link" (string, provide actual, relevant, and functional links). Each semester must have at least 2 certifications related to the courses in that semester.
     - "projects": array of objects with "id" (string), "title" (string), "description" (string), "difficulty" (string), "semester" (number), and "steps" (array of strings, provide detailed and actionable implementation steps, e.g., for a website: "Set up project structure", "Design UI mockups", "Implement frontend components", "Develop backend API", "Integrate frontend and backend", "Deploy to hosting").
     - "researchPapers": array of objects with "title" (string), "link" (string, provide actual, relevant, and functional links), and "abstract" (string, provide a concise summary). Ensure this array is populated with relevant research papers.
 

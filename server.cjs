@@ -1,11 +1,16 @@
 
 const express = require('express');
 const { GoogleGenerativeAI } = require('@google/generative-ai');
+const cors = require('cors');
 
 const app = express();
-const port = 3001;
+const port = 3002;
 
 app.use(express.json());
+
+app.use(cors({
+  origin: 'http://localhost:5173'
+}));
 
 // Directly use the API key (for testing purposes only - DO NOT DO THIS IN PRODUCTION)
 const GEMINI_API_KEY = 'AIzaSyC6nmlR4fkXP3p517mpV8cPnpcy25S1jAQ';

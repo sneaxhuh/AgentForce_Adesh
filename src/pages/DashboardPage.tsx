@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAppContext, Project, SemesterPlan } from '../contexts/AppContext';
 import { generateSemesterPlan } from '../services/aiService';
+import { motion } from 'framer-motion';
 import {
   BookOpen,
   Award,
@@ -15,13 +16,28 @@ import {
   Target,
   Sparkles
 } from 'lucide-react';
-import { motion } from 'framer-motion';
+import ProgressSummary from '../components/ProgressSummary';
 
 const DashboardPage: React.FC = () => {
   const navigate = useNavigate();
   const { userProfile, semesterPlans, setSemesterPlans, setCurrentProject } = useAppContext();
   const [isGenerating, setIsGenerating] = useState(false);
-  const [isInitialLoad, setIsInitialLoad] = useState(true);
+  const [showProgressSummary, setShowProgressSummary] = useState(false);
+
+  useEffect(() => {
+    const lastShown = localStorage.getItem('progressSummaryLastShown');
+    const today = new Date().getTime();
+    const oneWeek = 7 * 24 * 60 * 60 * 1000;
+
+    if (!lastShown || today - parseInt(lastShown, 10) > oneWeek) {
+      setShowProgressSummary(true);
+    }
+  }, []);
+
+  const handleCloseSummary = () => {
+    setShowProgressSummary(false);
+    localStorage.setItem('progressSummaryLastShown', new Date().getTime().toString());
+  };
 
   const generatePlan = useCallback(async () => {
     if (!userProfile.name) return;
@@ -43,11 +59,8 @@ const DashboardPage: React.FC = () => {
       return;
     }
 
-    if (semesterPlans.length === 0 && isInitialLoad) {
-      generatePlan();
-    }
-    setIsInitialLoad(false);
-  }, [userProfile.name, semesterPlans.length, navigate, isInitialLoad, generatePlan]);
+    
+  }, [userProfile.name, semesterPlans.length, navigate, generatePlan]);
 
   const handleProjectClick = (project: Project) => {
     setCurrentProject(project);
@@ -64,6 +77,7 @@ const DashboardPage: React.FC = () => {
 
   return (
     <div className="space-y-6">
+      {showProgressSummary && <ProgressSummary onClose={handleCloseSummary} />}
       {/* Welcome Header */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
@@ -191,20 +205,28 @@ const DashboardPage: React.FC = () => {
                       <h4 className="font-semibold">Certifications</h4>
                     </div>
                     <div className="space-y-2">
-                      {plan.certifications.map((cert, idx) => (
-                        <div
-                          key={idx}
-                          className="p-3 bg-green-50 dark:bg-green-900/20 rounded-lg"
-                        >
-                          <div className="flex items-center justify-between">
-                            <span className="font-medium text-gray-900 dark:text-white">{cert.title}</span>
-                            <span className="text-xs bg-green-100 dark:bg-green-800 text-green-800 dark:text-green-200 px-2 py-1 rounded">
-                              {cert.difficulty}
-                            </span>
+                      {plan.certifications.length > 0 ? (
+                        plan.certifications.map((cert, idx) => (
+                          <div
+                            key={idx}
+                            className="p-3 bg-green-50 dark:bg-green-900/20 rounded-lg"
+                          >
+                            <div className="flex items-center justify-between">
+                              <a href={cert.link} target="_blank" rel="noopener noreferrer" className="font-medium text-gray-900 dark:text-white hover:underline">{cert.title}</a>
+                              <span className={`text-xs px-2 py-1 rounded ${
+                                cert.difficulty === 'Beginner' ? 'bg-green-100 dark:bg-green-800 text-green-800 dark:text-green-200' :
+                                cert.difficulty === 'Intermediate' ? 'bg-yellow-100 dark:bg-yellow-800 text-yellow-800 dark:text-yellow-200' :
+                                'bg-red-100 dark:bg-red-800 text-red-800 dark:text-red-200'
+                              }`}>
+                                {cert.difficulty}
+                              </span>
+                            </div>
+                            <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">{cert.platform}</p>
                           </div>
-                          <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">{cert.platform}</p>
-                        </div>
-                      ))}
+                        ))
+                      ) : (
+                        <p className="text-gray-500 dark:text-gray-400">No relevant certifications found.</p>
+                      )}
                     </div>
                   </div>
 
@@ -247,20 +269,24 @@ const DashboardPage: React.FC = () => {
                       <h4 className="font-semibold">Research Papers</h4>
                     </div>
                     <div className="space-y-2">
-                      {plan.researchPapers.map((paper, idx) => (
-                        <div
-                          key={idx}
-                          className="p-3 bg-orange-50 dark:bg-orange-900/20 rounded-lg"
-                        >
-                          <div className="flex items-center justify-between">
-                            <span className="font-medium text-gray-900 dark:text-white">{paper.title}</span>
-                            <ExternalLink size={16} className="text-orange-600 dark:text-orange-400 hover:text-orange-800 cursor-pointer" />
+                      {plan.researchPapers.length > 0 ? (
+                        plan.researchPapers.map((paper, idx) => (
+                          <div
+                            key={idx}
+                            className="p-3 bg-orange-50 dark:bg-orange-900/20 rounded-lg"
+                          >
+                            <div className="flex items-center justify-between">
+                              <a href={paper.link} target="_blank" rel="noopener noreferrer" className="font-medium text-gray-900 dark:text-white hover:underline">{paper.title}</a>
+                              <ExternalLink size={16} className="text-orange-600 dark:text-orange-400 hover:text-orange-800 cursor-pointer" />
+                            </div>
+                            <p className="text-sm text-gray-600 dark:text-gray-400 mt-1 line-clamp-2">
+                              {paper.abstract}
+                            </p>
                           </div>
-                          <p className="text-sm text-gray-600 dark:text-gray-400 mt-1 line-clamp-2">
-                            {paper.abstract}
-                          </p>
-                        </div>
-                      ))}
+                        ))
+                      ) : (
+                        <p className="text-gray-500 dark:text-gray-400">No relevant research papers found.</p>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -271,7 +297,7 @@ const DashboardPage: React.FC = () => {
       )}
 
       {/* Empty State */}
-      {!isGenerating && semesterPlans.length === 0 && !isInitialLoad && (
+      {!isGenerating && semesterPlans.length === 0 && (
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}

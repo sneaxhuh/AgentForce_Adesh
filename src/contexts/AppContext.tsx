@@ -16,6 +16,7 @@ export interface Project {
   difficulty: 'Easy' | 'Medium' | 'Hard';
   semester: number;
   steps: string[];
+  completed: boolean;
   repoStructure?: {
     folders: string[];
     files: { name: string; content: string }[];
@@ -31,8 +32,9 @@ export interface SemesterPlan {
     learningObjectives?: string[];
     prerequisites?: string[];
     recommendedResources?: { type: string; title: string; link: string }[];
+    completed: boolean; // Added completed property
   }[];
-  certifications: { title: string; platform: string; difficulty: string }[];
+  certifications: { title: string; platform: string; difficulty: string; link: string; completed: boolean }[]; // Added completed property
   projects: Project[];
   researchPapers: { title: string; link: string; abstract: string }[];
 }
@@ -100,29 +102,28 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
   const [darkMode, setDarkMode] = useState(false);
   const [currentProject, setCurrentProject] = useState<Project | null>(null);
 
-  // Load data from localStorage on mount
   useEffect(() => {
-    const savedProfile = localStorage.getItem('academicPlanner_userProfile');
+    const savedProfile = false;
     if (savedProfile) {
       setUserProfile(JSON.parse(savedProfile));
     }
 
-    const savedPlans = localStorage.getItem('academicPlanner_semesterPlans');
+    const savedPlans = false;
     if (savedPlans) {
       setSemesterPlans(JSON.parse(savedPlans));
     }
 
-    const savedGoals = localStorage.getItem('academicPlanner_weeklyGoals');
+    const savedGoals = false;
     if (savedGoals) {
       setWeeklyGoals(JSON.parse(savedGoals));
     }
 
-    const savedNotes = localStorage.getItem('academicPlanner_notes');
+    const savedNotes = false;
     if (savedNotes) {
       setNotes(JSON.parse(savedNotes));
     }
 
-    const savedDarkMode = localStorage.getItem('academicPlanner_darkMode');
+    const savedDarkMode = false;
     if (savedDarkMode) {
       setDarkMode(JSON.parse(savedDarkMode));
     }

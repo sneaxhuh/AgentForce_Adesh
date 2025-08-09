@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useLocation } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { useAppContext, SemesterPlan } from '../contexts/AppContext';
 import { generateCourseRecommendations } from '../services/aiService';
 import {
@@ -9,14 +9,16 @@ import {
   FlaskConical,
   BrainCircuit,
   RefreshCw,
-  Award
+  Award,
+  ArrowLeft
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 
 type CourseType = SemesterPlan['courses'][0];
 
 const CoursePage = () => {
-  const { darkMode } = useAppContext();
+  const { darkMode, semesterPlans, setSemesterPlans } = useAppContext();
+  const navigate = useNavigate();
   const location = useLocation();
   const { course } = location.state as { course: CourseType } || {};
 
@@ -50,6 +52,19 @@ const CoursePage = () => {
 
   return (
     <div className={`p-6 ${darkMode ? 'dark' : ''}`}>
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="max-w-4xl mx-auto mb-6"
+      >
+        <button
+          onClick={() => navigate('/dashboard')}
+          className="flex items-center space-x-2 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors"
+        >
+          <ArrowLeft size={20} />
+          <span>Back to Dashboard</span>
+        </button>
+      </motion.div>
       <div className="max-w-4xl mx-auto bg-white dark:bg-gray-800 rounded-lg shadow-lg p-8">
         <div className="flex items-center mb-6">
           <BookOpen className="w-8 h-8 mr-4 text-blue-600 dark:text-blue-400" />
@@ -99,6 +114,28 @@ const CoursePage = () => {
                 </ul>
               </div>
             )}
+            <div>
+              <h3 className="font-semibold text-lg mb-1">Status:</h3>
+              <div className="flex items-center">
+                <input
+                  type="checkbox"
+                  checked={course.completed}
+                  onChange={(e) => {
+                    const updatedPlans = semesterPlans.map(plan => ({
+                      ...plan,
+                      courses: plan.courses.map(c => 
+                        c.title === course.title ? { ...c, completed: e.target.checked } : c
+                      )
+                    }));
+                    setSemesterPlans(updatedPlans);
+                  }}
+                  className="h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                />
+                <label className="ml-2 text-gray-700 dark:text-gray-300">
+                  {course.completed ? 'Completed' : 'Mark as Complete'}
+                </label>
+              </div>
+            </div>
             {course.assignmentsAndExams && course.assignmentsAndExams.length > 0 && (
               <div>
                 <h3 className="font-semibold text-lg mb-1">Assignments & Exams:</h3>
