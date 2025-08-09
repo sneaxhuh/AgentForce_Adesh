@@ -159,13 +159,22 @@ export const generateGitHubStructure = async (project: Project): Promise<{ folde
   `; const response = await callAIApi(prompt); try { const jsonMatch = response.match(/```json\n([\s\S]*?)\n```/); if (jsonMatch && jsonMatch[1]) { return JSON.parse(jsonMatch[1]); } return JSON.parse(response); } catch (error) { console.error("Failed to parse GitHub structure response:", response); throw error; } };
 
 export const generateNotesSuggestions = async (notesText: string): Promise<string[]> => {
-  const prompt = `Generate suggestions for the following notes: ${notesText}`;
+  const prompt = `Generate a JSON array of strings as suggestions for the following notes: ${notesText}. The output MUST be a valid JSON array of strings. Do not include any other text or markdown.`;
   const response = await callAIApi(prompt);
-  return JSON.parse(response);
+  try {
+    const jsonMatch = response.match(/```json\n([\s\S]*?)\n```/);
+    if (jsonMatch && jsonMatch[1]) {
+      return JSON.parse(jsonMatch[1]);
+    }
+    return JSON.parse(response);
+  } catch (error) {
+    console.error("Failed to parse notes suggestions response:", response);
+    throw error;
+  }
 };
 
 export const generateNoteSummary = async (notesText: string): Promise<string> => {
-  const prompt = `Summarize the following notes: ${notesText}`;
+  const prompt = `Summarize the following notes: ${notesText}. Provide only the summary text, without any additional formatting, markdown, or JSON wrapping.`;
   const response = await callAIApi(prompt);
   return response;
 };
