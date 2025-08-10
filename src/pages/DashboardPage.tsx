@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../contexts/AuthContext';
 import { useAppContext, Project, SemesterPlan } from '../contexts/AppContext';
 import { generateSemesterPlan } from '../services/aiService';
 import { motion } from 'framer-motion';
@@ -20,6 +21,7 @@ import {
 const DashboardPage: React.FC = () => {
   const navigate = useNavigate();
   const { userProfile, semesterPlans, setSemesterPlans, setCurrentProject } = useAppContext();
+  const { logout } = useAuth();
   const [isGenerating, setIsGenerating] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -90,8 +92,11 @@ const DashboardPage: React.FC = () => {
               </div>
             </div>
           </div>
-          <div className="hidden md:block">
-            <Sparkles size={64} className="text-yellow-400 opacity-80" />
+          <div className="flex items-center">
+            <button onClick={logout} className="text-white bg-white/20 hover:bg-white/30 rounded-lg px-4 py-2 transition-colors">Logout</button>
+            <div className="hidden md:block ml-4">
+              <Sparkles size={64} className="text-yellow-400 opacity-80" />
+            </div>
           </div>
         </div>
       </motion.div>
@@ -291,7 +296,7 @@ const DashboardPage: React.FC = () => {
                             className="block p-4 bg-gradient-to-r from-orange-50 to-amber-50 dark:from-orange-900/20 dark:to-amber-900/20 rounded-xl border border-orange-200 dark:border-orange-800/50 hover:from-orange-100 hover:to-amber-100 dark:hover:from-orange-800/30 dark:hover:to-amber-800/30 transition-all duration-200 hover:shadow-sm"
                           >
                             <div className="flex items-start justify-between">
-                              <h5 className="font-semibold text-gray-900 dark:text-white pr-2">{paper.title}</h5>
+                              <h5 className="font-medium text-gray-900 dark:text-white pr-2">{paper.title}</h5>
                               <ExternalLink size={16} className="flex-shrink-0 text-orange-600 dark:text-orange-400 mt-0.5" />
                             </div>
                             <p className="text-sm text-gray-600 dark:text-gray-300 mt-2 line-clamp-3">
