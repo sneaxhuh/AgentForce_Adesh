@@ -58,10 +58,12 @@ A smart semester and career planning assistant powered by AI.
 
 ## Deployment
 
+Detailed deployment instructions can be found in [DEPLOYMENT.md](DEPLOYMENT.md).
+
 ### Frontend (Firebase Hosting)
 1. Install Firebase CLI: `npm install -g firebase-tools`
 2. Login: `firebase login`
-3. Initialize hosting: `firebase init hosting`
+3. Initialize hosting: `firebase init hosting` (use `dist` as public directory)
 4. Build and deploy: `npm run build` then `firebase deploy`
 
 ### Backend (Render)
@@ -73,6 +75,16 @@ Follow the configuration in `render.json` for easy deployment.
 
 ## Environment Variables
 
+### Development (.env)
+- `GEMINI_API_KEY` - Google Gemini API key
+- `GMAIL_USER` - Gmail address for sending emails
+- `GMAIL_APP_PASSWORD` - App password for Gmail (not your regular password)
+
+### Production (.env.production)
+- `VITE_API_BASE_URL` - Deployed API server URL
+- `VITE_EMAIL_API_BASE_URL` - Deployed email server URL
+
+### Render Environment Variables
 - `GEMINI_API_KEY` - Google Gemini API key
 - `GMAIL_USER` - Gmail address for sending emails
 - `GMAIL_APP_PASSWORD` - App password for Gmail (not your regular password)

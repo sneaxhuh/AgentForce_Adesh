@@ -1,6 +1,7 @@
 import { UserProfile, SemesterPlan, Project, Note } from '../contexts/AppContext';
 import { auth } from '../firebase'; // Import Firebase auth
 import { getIdToken } from 'firebase/auth'; // Import getIdToken
+import { API_BASE_URL } from '../constants/api';
 
 interface Course {
   title: string;
@@ -19,7 +20,7 @@ const callAIApi = async (prompt: string) => {
     token = await user.getIdToken(); // Get Firebase ID token
   }
 
-  const response = await fetch('http://localhost:3002/api/ai', {
+  const response = await fetch(`${API_BASE_URL}/api/ai`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',

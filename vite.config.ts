@@ -7,7 +7,7 @@ export default defineConfig({
   server: {
     proxy: {
       '/api': {
-        target: 'http://localhost:3001',
+        target: 'http://localhost:3002',
         changeOrigin: true,
       },
     },
@@ -15,7 +15,7 @@ export default defineConfig({
   // Define environment variables for production
   define: {
     // These will be replaced with actual values during build
-    __API_URL__: JSON.stringify(process.env.API_URL || 'http://localhost:3002'),
-    __EMAIL_API_URL__: JSON.stringify(process.env.EMAIL_API_URL || 'http://localhost:3003'),
+    __API_URL__: JSON.stringify(process.env.VITE_API_BASE_URL || 'http://localhost:3002'),
+    __EMAIL_API_URL__: JSON.stringify(process.env.VITE_EMAIL_API_BASE_URL || 'http://localhost:3003'),
   },
 });

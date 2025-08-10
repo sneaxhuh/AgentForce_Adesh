@@ -3,6 +3,7 @@ import { useAppContext, WeeklyGoal } from '../contexts/AppContext';
 import { generateProgressNudge } from '../services/aiService';
 import { doc, setDoc } from 'firebase/firestore';
 import { db } from '../firebase';
+import { EMAIL_API_BASE_URL } from '../constants/api';
 
 import {
   Calendar,
@@ -83,7 +84,7 @@ const ProgressPage: React.FC = () => {
         emailHtml += `<p><b>Overall Progress: ${completionPercentage.toFixed(0)}%</b></p>`;
 
         // Send email via backend
-        fetch('http://localhost:3003/send-reminder', {
+        fetch(`${EMAIL_API_BASE_URL}/send-reminder`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
@@ -413,7 +414,7 @@ const ProgressPage: React.FC = () => {
                       if (newEmailReminders) {
                         // Send initial registration email or confirmation
                         try {
-                          await fetch('http://localhost:3003/send-reminder', {
+                          await fetch(`${EMAIL_API_BASE_URL}/send-reminder`, {
                             method: 'POST',
                             headers: { 'Content-Type': 'application/json' },
                             body: JSON.stringify({

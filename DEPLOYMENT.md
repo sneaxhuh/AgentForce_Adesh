@@ -16,6 +16,7 @@
    ```bash
    firebase init hosting
    ```
+   When prompted, use `dist` as the public directory and configure as a single-page app.
 
 4. Build and deploy the frontend:
    ```bash
@@ -56,7 +57,4 @@ Both services are configured in `render.json` for deployment to Render.
 
 ## Updating API Endpoints
 
-After deploying the backend, you'll need to update the frontend to point to the new API URLs:
-
-1. Update the API base URL in your frontend code
-2. Redeploy the frontend
+The frontend is already configured to use the deployed backend URLs through environment variables. When you build for production, it will automatically use the URLs specified in `.env.production`.

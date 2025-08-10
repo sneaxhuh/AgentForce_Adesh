@@ -112,7 +112,7 @@ app.post('/api/send-goal-reminders', authenticateToken, async (req, res) => {
     }
 
     // Send email using the email server
-    await axios.post('http://localhost:3003/send-reminder', {
+    await axios.post('https://academic-planner-email.onrender.com/send-reminder', {
       to: userEmail,
       subject: 'Your Goal Status Reminder',
       html: emailHtml,

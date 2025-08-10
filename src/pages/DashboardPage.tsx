@@ -4,6 +4,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { useAppContext, Project, SemesterPlan } from '../contexts/AppContext';
 import { generateSemesterPlan } from '../services/aiService';
 import { motion } from 'framer-motion';
+import { API_BASE_URL } from '../constants/api';
 import {
   BookOpen,
   Award,
@@ -62,7 +63,7 @@ const DashboardPage: React.FC = () => {
   const sendGoalReminder = async () => {
     try {
       const idToken = await getIdToken();
-      const response = await fetch('http://localhost:3002/api/send-goal-reminders', {
+      const response = await fetch(`${API_BASE_URL}/api/send-goal-reminders`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
