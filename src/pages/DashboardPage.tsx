@@ -16,29 +16,11 @@ import {
   Target,
   Sparkles
 } from 'lucide-react';
-import ProgressSummary from '../components/ProgressSummary';
 
 const DashboardPage: React.FC = () => {
   const navigate = useNavigate();
   const { userProfile, semesterPlans, setSemesterPlans, setCurrentProject } = useAppContext();
   const [isGenerating, setIsGenerating] = useState(false);
-  const [showProgressSummary, setShowProgressSummary] = useState(false);
-
-  useEffect(() => {
-    const lastShown = localStorage.getItem('progressSummaryLastShown');
-    const today = new Date().getTime();
-    const oneWeek = 7 * 24 * 60 * 60 * 1000;
-
-    if (!lastShown || today - parseInt(lastShown, 10) > oneWeek) {
-      setShowProgressSummary(true);
-    }
-  }, []);
-
-  const handleCloseSummary = () => {
-    setShowProgressSummary(false);
-    localStorage.setItem('progressSummaryLastShown', new Date().getTime().toString());
-  };
-
   const [error, setError] = useState<string | null>(null);
 
   const generatePlan = useCallback(async () => {
@@ -81,7 +63,6 @@ const DashboardPage: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      {showProgressSummary && <ProgressSummary onClose={handleCloseSummary} />}
       {/* Welcome Header */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
@@ -199,16 +180,16 @@ const DashboardPage: React.FC = () => {
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                   {/* Courses */}
                   <div className="space-y-4">
-                    <div className="flex items-center space-x-2 text-blue-600 dark:text-blue-400">
+                    <span className="flex items-center space-x-2 text-blue-600 dark:text-blue-400">
                       <BookOpen size={20} />
-                      <h4 className="font-semibold">Recommended Courses</h4>
-                    </div>
-                    <div className="space-y-2">
+                      <h4 className="font-bold">Recommended Courses</h4>
+                    </span>
+                    <div className="space-y-3">
                       {plan.courses.map((course, idx) => (
                         <div
                           key={idx}
                           onClick={() => handleCourseClick(course)}
-                          className="flex items-center justify-between p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg cursor-pointer hover:bg-blue-100 dark:hover:bg-blue-900/30 transition-colors group"
+                          className="flex items-center justify-between p-4 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 rounded-xl border border-blue-200 dark:border-blue-800/50 hover:from-blue-100 hover:to-indigo-100 dark:hover:from-blue-800/30 dark:hover:to-indigo-800/30 cursor-pointer transition-all duration-200 hover:shadow-sm group"
                         >
                           <span className="font-medium text-gray-900 dark:text-white">{course.title}</span>
                           <ChevronRight size={16} className="text-blue-600 dark:text-blue-400 group-hover:translate-x-1 transition-transform" />
@@ -219,59 +200,71 @@ const DashboardPage: React.FC = () => {
 
                   {/* Certifications */}
                   <div className="space-y-4">
-                    <div className="flex items-center space-x-2 text-green-600 dark:text-green-400">
+                    <span className="flex items-center space-x-2 text-green-600 dark:text-green-400">
                       <Award size={20} />
-                      <h4 className="font-semibold">Certifications</h4>
-                    </div>
-                    <div className="space-y-2">
+                      <h4 className="font-bold">Certifications</h4>
+                    </span>
+                    <div className="space-y-3">
                       {plan.certifications.length > 0 ? (
                         plan.certifications.map((cert, idx) => (
-                          <div
+                          <a
                             key={idx}
-                            className="p-3 bg-green-50 dark:bg-green-900/20 rounded-lg"
+                            href={cert.link}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="block p-4 bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 rounded-xl border border-green-200 dark:border-green-800/50 hover:from-green-100 hover:to-emerald-100 dark:hover:from-green-800/30 dark:hover:to-emerald-800/30 transition-all duration-200 hover:shadow-sm"
                           >
-                            <div className="flex items-center justify-between">
-                              <a href={cert.link} target="_blank" rel="noopener noreferrer" className="font-medium text-gray-900 dark:text-white hover:underline">{cert.title}</a>
-                              <span className={`text-xs px-2 py-1 rounded ${
-                                cert.difficulty === 'Beginner' ? 'bg-green-100 dark:bg-green-800 text-green-800 dark:text-green-200' :
-                                cert.difficulty === 'Intermediate' ? 'bg-yellow-100 dark:bg-yellow-800 text-yellow-800 dark:text-yellow-200' :
-                                'bg-red-100 dark:bg-red-800 text-red-800 dark:text-red-200'
+                            <div className="flex items-start justify-between">
+                              <div>
+                                <h5 className="font-medium text-gray-900 dark:text-white">{cert.title}</h5>
+                                <p className="text-sm text-gray-600 dark:text-gray-300 mt-1">{cert.platform}</p>
+                              </div>
+                              <ExternalLink size={16} className="flex-shrink-0 text-green-600 dark:text-green-400 mt-0.5" />
+                            </div>
+                            <div className="mt-3">
+                              <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                                cert.difficulty === 'Beginner' 
+                                  ? 'bg-green-100 dark:bg-green-800/30 text-green-800 dark:text-green-200' :
+                                cert.difficulty === 'Intermediate' 
+                                  ? 'bg-yellow-100 dark:bg-yellow-800/30 text-yellow-800 dark:text-yellow-200' :
+                                  'bg-red-100 dark:bg-red-800/30 text-red-800 dark:text-red-200'
                               }`}>
                                 {cert.difficulty}
                               </span>
                             </div>
-                            <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">{cert.platform}</p>
-                          </div>
+                          </a>
                         ))
                       ) : (
-                        <p className="text-gray-500 dark:text-gray-400">No relevant certifications found.</p>
+                        <div className="p-4 bg-green-50 dark:bg-green-900/10 rounded-lg border border-green-200 dark:border-green-800/30">
+                          <p className="text-gray-500 dark:text-gray-400 text-center">No relevant certifications found.</p>
+                        </div>
                       )}
                     </div>
                   </div>
 
                   {/* Projects */}
                   <div className="space-y-4">
-                    <div className="flex items-center space-x-2 text-purple-600 dark:text-purple-400">
+                    <span className="flex items-center space-x-2 text-purple-600 dark:text-purple-400">
                       <Code2 size={20} />
-                      <h4 className="font-semibold">Projects</h4>
-                    </div>
-                    <div className="space-y-2">
+                      <h4 className="font-bold">Projects</h4>
+                    </span>
+                    <div className="space-y-3">
                       {plan.projects.map((project, idx) => (
                         <div
                           key={idx}
                           onClick={() => handleProjectClick(project)}
-                          className="p-3 bg-purple-50 dark:bg-purple-900/20 rounded-lg cursor-pointer hover:bg-purple-100 dark:hover:bg-purple-900/30 transition-colors group"
+                          className="p-4 bg-gradient-to-r from-purple-50 to-fuchsia-50 dark:from-purple-900/20 dark:to-fuchsia-900/20 rounded-xl border border-purple-200 dark:border-purple-800/50 hover:from-purple-100 hover:to-fuchsia-100 dark:hover:from-purple-800/30 dark:hover:to-fuchsia-800/30 cursor-pointer transition-all duration-200 hover:shadow-sm group"
                         >
-                          <div className="flex items-center justify-between">
-                            <span className="font-medium text-gray-900 dark:text-white">{project.title}</span>
-                            <ChevronRight size={16} className="text-purple-600 dark:text-purple-400 group-hover:translate-x-1 transition-transform" />
+                          <div className="flex items-start justify-between">
+                            <h5 className="font-medium text-gray-900 dark:text-white">{project.title}</h5>
+                            <ChevronRight size={16} className="text-purple-600 dark:text-purple-400 group-hover:translate-x-1 transition-transform flex-shrink-0 mt-0.5" />
                           </div>
-                          <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">{project.description}</p>
-                          <div className="mt-2">
-                            <span className={`text-xs px-2 py-1 rounded ${
-                              project.difficulty === 'Easy' ? 'bg-green-100 dark:bg-green-800 text-green-800 dark:text-green-200' :
-                              project.difficulty === 'Medium' ? 'bg-yellow-100 dark:bg-yellow-800 text-yellow-800 dark:text-yellow-200' :
-                              'bg-red-100 dark:bg-red-800 text-red-800 dark:text-red-200'
+                          <p className="text-sm text-gray-600 dark:text-gray-300 mt-2">{project.description}</p>
+                          <div className="mt-3">
+                            <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                              project.difficulty === 'Easy' ? 'bg-green-100 dark:bg-green-800/30 text-green-800 dark:text-green-200' :
+                              project.difficulty === 'Medium' ? 'bg-yellow-100 dark:bg-yellow-800/30 text-yellow-800 dark:text-yellow-200' :
+                              'bg-red-100 dark:bg-red-800/30 text-red-800 dark:text-red-200'
                             }`}>
                               {project.difficulty}
                             </span>
@@ -283,28 +276,38 @@ const DashboardPage: React.FC = () => {
 
                   {/* Research Papers */}
                   <div className="space-y-4">
-                    <div className="flex items-center space-x-2 text-orange-600 dark:text-orange-400">
+                    <span className="flex items-center space-x-2 text-orange-600 dark:text-orange-400">
                       <FileText size={20} />
-                      <h4 className="font-semibold">Research Papers</h4>
-                    </div>
-                    <div className="space-y-2">
+                      <h4 className="font-bold">Research Papers</h4>
+                    </span>
+                    <div className="space-y-3">
                       {plan.researchPapers.length > 0 ? (
                         plan.researchPapers.map((paper, idx) => (
-                          <div
+                          <a
                             key={idx}
-                            className="p-3 bg-orange-50 dark:bg-orange-900/20 rounded-lg"
+                            href={paper.link}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="block p-4 bg-gradient-to-r from-orange-50 to-amber-50 dark:from-orange-900/20 dark:to-amber-900/20 rounded-xl border border-orange-200 dark:border-orange-800/50 hover:from-orange-100 hover:to-amber-100 dark:hover:from-orange-800/30 dark:hover:to-amber-800/30 transition-all duration-200 hover:shadow-sm"
                           >
-                            <div className="flex items-center justify-between">
-                              <a href={paper.link} target="_blank" rel="noopener noreferrer" className="font-medium text-gray-900 dark:text-white hover:underline">{paper.title}</a>
-                              <ExternalLink size={16} className="text-orange-600 dark:text-orange-400 hover:text-orange-800 cursor-pointer" />
+                            <div className="flex items-start justify-between">
+                              <h5 className="font-semibold text-gray-900 dark:text-white pr-2">{paper.title}</h5>
+                              <ExternalLink size={16} className="flex-shrink-0 text-orange-600 dark:text-orange-400 mt-0.5" />
                             </div>
-                            <p className="text-sm text-gray-600 dark:text-gray-400 mt-1 line-clamp-2">
+                            <p className="text-sm text-gray-600 dark:text-gray-300 mt-2 line-clamp-3">
                               {paper.abstract}
                             </p>
-                          </div>
+                            <div className="mt-3 flex items-center">
+                              <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-orange-100 dark:bg-orange-800/30 text-orange-800 dark:text-orange-200">
+                                Research Paper
+                              </span>
+                            </div>
+                          </a>
                         ))
                       ) : (
-                        <p className="text-gray-500 dark:text-gray-400">No relevant research papers found.</p>
+                        <div className="p-4 bg-orange-50 dark:bg-orange-900/10 rounded-lg border border-orange-200 dark:border-orange-800/30">
+                          <p className="text-gray-500 dark:text-gray-400 text-center">No relevant research papers found.</p>
+                        </div>
                       )}
                     </div>
                   </div>

@@ -73,9 +73,9 @@ export const generateSemesterPlan = async (userData: UserProfile): Promise<Semes
       "learningObjectives" (array of strings, what the student should gain),
       "prerequisites" (array of strings, required prior knowledge, provide at least one if applicable),
       "recommendedResources" (array of objects with "type" (string, e.g., "Book", "Article", "Video"), "title" (string), "link" (string, provide actual, relevant, and functional links, not placeholders), provide at least 2 resources). Each semester must have at least 2 courses.
-    - "certifications": array of objects with "title" (string), "platform" (string), "difficulty" (string), and "link" (string, provide actual, relevant, and functional links). Each semester must have at least 2 certifications related to the courses in that semester.
+    - "certifications": array of objects with "title" (string), "platform" (string), "difficulty" (string), and "link" (string, provide actual, relevant, and functional EXTERNAL links starting with 'http://' or 'https://'). Each semester must have at least 2 certifications related to the courses in that semester.
     - "projects": array of objects with "id" (string), "title" (string), "description" (string), "difficulty" (string), "semester" (number), and "steps" (array of strings, provide detailed and actionable implementation steps, e.g., for a website: "Set up project structure", "Design UI mockups", "Implement frontend components", "Develop backend API", "Integrate frontend and backend", "Deploy to hosting").
-    - "researchPapers": array of objects with "title" (string), "link" (string, provide actual, relevant, and functional links), and "abstract" (string, provide a concise summary). Ensure this array is populated with relevant research papers.
+    - "researchPapers": array of objects with "title" (string), "link" (string, provide actual, relevant, and functional EXTERNAL links starting with 'http://' or 'https://'), and "abstract" (string, provide a concise summary). Ensure this array is populated with relevant research papers.
 
     Example of a single semester object:
     {
@@ -216,7 +216,7 @@ export const generateCourseRecommendations = async (
     The output MUST be a valid JSON object. Do not include any other text or markdown.
     The object must have the following properties:
     - "studyPlan": string
-    - "certifications": array of { "title": string, "platform": string, "link": string }
+    - "certifications": array of { "title": string, "platform": string, "link": string, provide actual, relevant, and functional EXTERNAL links starting with 'http://' or 'https://' }
     - "projectIdeas": array of { "title": string, "description": string }
   `;
 

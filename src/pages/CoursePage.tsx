@@ -195,9 +195,7 @@ const CoursePage = () => {
                   <ul className="list-disc list-inside">
                     {aiRecommendations.certifications.map((cert, idx) => (
                       <li key={idx}>
-                        <a href={cert.link} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline dark:text-blue-400">
-                          {cert.title} ({cert.platform})
-                        </a>
+                        {cert.title} ({cert.platform})
                       </li>
                     ))}
                   </ul>

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useAppContext } from '../contexts/AppContext';
+import { useAppContext, WeeklyGoal } from '../contexts/AppContext';
 import { generateProgressNudge } from '../services/aiService';
 
 import {
@@ -7,14 +7,12 @@ import {
   CheckCircle2,
   Circle,
   TrendingUp,
-  Award,
   Target,
   Clock,
   Plus,
   Trash2,
   MessageCircle,
   Mail,
-  BarChart3,
   RefreshCw
 } from 'lucide-react';
 
@@ -111,9 +109,32 @@ const ProgressPage: React.FC = () => {
     }
   }, [emailReminders, weeklyGoals, completionPercentage]);
 
-  
+  const addGoal = () => {
+    if (newGoalTitle.trim() && newGoalDueDate) {
+      const newGoal: WeeklyGoal = {
+        id: Date.now().toString(),
+        title: newGoalTitle.trim(),
+        dueDate: newGoalDueDate,
+        completed: false,
+      };
+      setWeeklyGoals([...weeklyGoals, newGoal]);
+      setNewGoalTitle('');
+      setNewGoalDueDate('');
+      setIsAddingGoal(false);
+    }
+  };
 
-  
+  const toggleGoal = (id: string) => {
+    setWeeklyGoals(
+      weeklyGoals.map(goal =>
+        goal.id === id ? { ...goal, completed: !goal.completed } : goal
+      )
+    );
+  };
+
+  const deleteGoal = (id: string) => {
+    setWeeklyGoals(weeklyGoals.filter(goal => goal.id !== id));
+  };
 
   return (
     <div className="max-w-6xl mx-auto space-y-6">
@@ -155,6 +176,18 @@ const ProgressPage: React.FC = () => {
         <div
           className="lg:col-span-2 bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm"
         >
+          <div className="flex justify-between items-center mb-4">
+            <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Weekly Goals</h2>
+            {!isAddingGoal && (
+              <button
+                onClick={() => setIsAddingGoal(true)}
+                className="flex items-center space-x-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+              >
+                <Plus size={16} />
+                <span>Add New Goal</span>
+              </button>
+            )}
+          </div>
 
           {/* Progress Overview */}
           <div className="mb-6 p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
@@ -216,7 +249,7 @@ const ProgressPage: React.FC = () => {
               {weeklyGoals.map((goal, index) => (
                 <div key={goal.id} value={goal}>
                   <div
-                    className={`p-4 rounded-lg border transition-all duration-200 ${
+                    className={`p-4 rounded-lg border transition-all duration-200 ${ 
                       goal.completed
                         ? 'bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-700'
                         : 'bg-white dark:bg-gray-700 border-gray-200 dark:border-gray-600'
@@ -235,7 +268,7 @@ const ProgressPage: React.FC = () => {
                       </button>
                       
                       <div className="flex-1">
-                        <p className={`font-medium ${
+                        <p className={`font-medium ${ 
                           goal.completed
                             ? 'text-green-800 dark:text-green-200 line-through'
                             : 'text-gray-900 dark:text-white'
@@ -345,12 +378,12 @@ const ProgressPage: React.FC = () => {
                       alert('Weekly email reminders disabled.');
                     }
                   }}
-                  className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${
+                  className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${ 
                     emailReminders ? 'bg-blue-600' : 'bg-gray-200 dark:bg-gray-600'
                   }`}
                 >
                   <span
-                    className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                    className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${ 
                       emailReminders ? 'translate-x-6' : 'translate-x-1'
                     }`}
                   />

@@ -49,6 +49,8 @@ export interface WeeklyGoal {
   dueDate: string;
 }
 
+
+
 export interface Note {
   id: string;
   title: string;
