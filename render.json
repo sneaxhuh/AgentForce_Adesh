@@ -1,0 +1,38 @@
+{
+  "services": [
+    {
+      "type": "web",
+      "name": "academic-planner-api",
+      "env": "node",
+      "buildCommand": "npm install",
+      "startCommand": "node server.cjs",
+      "envVars": [
+        {
+          "key": "NODE_ENV",
+          "value": "production"
+        },
+        {
+          "key": "PORT",
+          "value": "3002"
+        }
+      ]
+    },
+    {
+      "type": "web",
+      "name": "academic-planner-email",
+      "env": "node",
+      "buildCommand": "npm install",
+      "startCommand": "node emailServer.js",
+      "envVars": [
+        {
+          "key": "NODE_ENV",
+          "value": "production"
+        },
+        {
+          "key": "PORT",
+          "value": "3003"
+        }
+      ]
+    }
+  ]
+}

@@ -3,9 +3,18 @@ const { GoogleGenerativeAI } = require('@google/generative-ai');
 const cors = require('cors');
 const admin = require('firebase-admin'); // Import firebase-admin
 const axios = require('axios'); // Import axios
+require('dotenv').config(); 
 
 // Initialize Firebase Admin SDK
-const serviceAccount = require('./serviceAccountKey.json'); // Path to your service account key
+let serviceAccount;
+if (process.env.serviceAccountBase64) {
+  // Use service account from environment variable (for Render deployment)
+  const serviceAccountJson = Buffer.from(process.env.serviceAccountBase64, 'base64').toString('utf8');
+  serviceAccount = JSON.parse(serviceAccountJson);
+} else {
+  // Use local service account file (for local development)
+  serviceAccount = require('./serviceAccountKey.json');
+}
 
 admin.initializeApp({
   credential: admin.credential.cert(serviceAccount)
@@ -21,7 +30,7 @@ app.use(cors({
 }));
 
 // Paste your Gemini API key here
-const GEMINI_API_KEY = "AIzaSyDkA5bwlAGVtQKMF02_GbHXA4qIv--lLtg"; // <-- Replace with your actual API key
+const GEMINI_API_KEY = process.env.GEMINI_API_KEY;// <-- Replace with your actual API key
 
 const genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
 
