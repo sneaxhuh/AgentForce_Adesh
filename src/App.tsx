@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react'; // useEffect is needed at the top level
-import { BrowserRouter as Router, Routes, Route, Navigate, useNavigate } from 'react-router-dom'; // useNavigate is needed at the top level
+import { BrowserRouter as Router, Routes, Route, Navigate, useNavigate, useLocation } from 'react-router-dom'; // useNavigate is needed at the top level
 import { AppProvider, useAppContext } from './contexts/AppContext';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import ProtectedRoute from './components/ProtectedRoute';
@@ -17,10 +17,25 @@ import LoginPage from './pages/Auth/LoginPage';
 function AppContent() {
   const { isAuthenticated, loading: authLoading } = useAuth();
   const { userProfile, appDataLoading } = useAppContext();
+  const location = useLocation();
 
   // Show a loading screen while authentication or app data is loading
   if (authLoading || appDataLoading) {
     return <div>Loading application...</div>; // You can replace this with a more sophisticated loading spinner
+  }
+
+  // If the user is authenticated and is at the root path, redirect them to the dashboard or welcome page
+  if (isAuthenticated && location.pathname === '/') {
+    if (userProfile.name) {
+      return <Navigate to="/dashboard" replace />;
+    } else {
+      return <Navigate to="/welcome" replace />;
+    }
+  }
+
+  // If the user is not authenticated and is trying to access a protected route, redirect them to the login page
+  if (!isAuthenticated && location.pathname !== '/login' && location.pathname !== '/welcome') {
+    return <Navigate to="/login" replace />;
   }
 
   // Once loading is complete, render the actual routes

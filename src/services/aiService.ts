@@ -128,14 +128,14 @@ export const generateSemesterPlan = async (userData: UserProfile): Promise<Semes
       ]
     }
   `;
-  const response = await callAIApi(prompt);
+    const response = await callAIApi(prompt);
   try {
     // The response might be wrapped in markdown, so we need to extract the JSON part.
     const jsonMatch = response.match(/```json\n([\s\S]*?)\n```/);
     if (jsonMatch && jsonMatch[1]) {
-      return JSON.parse(jsonMatch[1]);
+      return JSON.parse(jsonrepair(jsonMatch[1]));
     }
-    return JSON.parse(response);
+    return JSON.parse(jsonrepair(response));
   } catch (error) {
     console.error("Failed to parse semester plan response:", response);
     throw error;

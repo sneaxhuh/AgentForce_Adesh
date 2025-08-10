@@ -1,11 +1,19 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { auth } from '../../firebase'; // Import Firebase auth
 import { GoogleAuthProvider, signInWithPopup } from 'firebase/auth';
+import { useAuth } from '../../contexts/AuthContext';
 
 const LoginPage: React.FC = () => {
   const [error, setError] = useState('');
   const navigate = useNavigate();
+  const { isAuthenticated, loading } = useAuth();
+
+  useEffect(() => {
+    if (!loading && isAuthenticated) {
+      navigate('/dashboard');
+    }
+  }, [isAuthenticated, loading, navigate]);
 
   const handleGoogleSignIn = async () => {
     setError('');
@@ -18,6 +26,10 @@ const LoginPage: React.FC = () => {
       setError('Failed to sign in with Google. Please try again.');
     }
   };
+
+  if (loading || isAuthenticated) {
+    return <div>Loading...</div>;
+  }
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-100">
