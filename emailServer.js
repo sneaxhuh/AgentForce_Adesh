@@ -9,7 +9,10 @@ const app = express();
 const port = process.env.PORT || 3003;
 
 app.use(cors({
-  origin: 'http://localhost:5173'
+  origin: [
+    'http://localhost:5173',        // local dev
+    'https://academic-planner-83ee8.web.app' // deployed frontend URL
+  ]
 }));
 app.use(express.json());
 
