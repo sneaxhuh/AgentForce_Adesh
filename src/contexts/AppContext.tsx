@@ -10,6 +10,8 @@ export interface UserProfile {
   interests: string[];
   currentSkills: string;
   weeklyStudyHours: number;
+  reminderEmail?: string;
+  emailRemindersEnabled?: boolean;
 }
 
 export interface Project {

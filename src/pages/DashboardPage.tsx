@@ -21,7 +21,7 @@ import {
 const DashboardPage: React.FC = () => {
   const navigate = useNavigate();
   const { userProfile, semesterPlans, setSemesterPlans, setCurrentProject } = useAppContext();
-  const { logout } = useAuth();
+  const { logout, getIdToken } = useAuth();
   const [isGenerating, setIsGenerating] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -57,6 +57,28 @@ const DashboardPage: React.FC = () => {
 
   const handleCourseClick = (course: SemesterPlan['courses'][0]) => {
     navigate('/course', { state: { course } });
+  };
+
+  const sendGoalReminder = async () => {
+    try {
+      const idToken = await getIdToken();
+      const response = await fetch('http://localhost:3002/api/send-goal-reminders', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${idToken}`,
+        },
+      });
+
+      if (response.ok) {
+        alert('Goal status reminder sent successfully!');
+      } else {
+        alert('Failed to send goal status reminder.');
+      }
+    } catch (error) {
+      console.error('Error sending goal status reminder:', error);
+      alert('Failed to send goal status reminder.');
+    }
   };
 
   if (!userProfile.name) {
@@ -121,6 +143,12 @@ const DashboardPage: React.FC = () => {
         >
           <RefreshCw size={16} className={isGenerating ? 'animate-spin' : ''} />
           <span>{isGenerating ? 'Generating...' : 'Regenerate Plan'}</span>
+        </button>
+        <button
+          onClick={sendGoalReminder}
+          className="flex items-center space-x-2 bg-gradient-to-r from-purple-600 to-indigo-600 text-white px-6 py-3 rounded-lg hover:shadow-lg transition-all duration-200"
+        >
+          <span>Send Goal Status</span>
         </button>
       </motion.div>
 
@@ -221,7 +249,7 @@ const DashboardPage: React.FC = () => {
                           >
                             <div className="flex items-start justify-between">
                               <div>
-                                <h5 className="font-medium text-gray-900 dark:text-white">{cert.title}</h5>
+                                <h5 className="font-bold text-gray-900 dark:text-white">{cert.title}</h5>
                                 <p className="text-sm text-gray-600 dark:text-gray-300 mt-1">{cert.platform}</p>
                               </div>
                               <ExternalLink size={16} className="flex-shrink-0 text-green-600 dark:text-green-400 mt-0.5" />

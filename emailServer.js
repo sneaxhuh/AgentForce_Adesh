@@ -24,11 +24,10 @@ const transporter = nodemailer.createTransport({
 
 // API endpoint to send email
 app.post('/send-reminder', async (req, res) => {
-  const { subject, text, html } = req.body;
-  const to = process.env.RECIPIENT_EMAIL;
+  const { to, subject, text, html } = req.body;
 
   if (!to) {
-    return res.status(400).json({ error: 'Recipient email not configured on server.' });
+    return res.status(400).json({ error: 'Recipient email is required.' });
   }
 
   if (!subject || (!text && !html)) {

@@ -2,6 +2,7 @@ const express = require('express');
 const { GoogleGenerativeAI } = require('@google/generative-ai');
 const cors = require('cors');
 const admin = require('firebase-admin'); // Import firebase-admin
+const axios = require('axios'); // Import axios
 
 // Initialize Firebase Admin SDK
 const serviceAccount = require('./serviceAccountKey.json'); // Path to your service account key
@@ -53,6 +54,65 @@ app.post('/api/ai', authenticateToken, async (req, res) => {
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: 'Failed to generate content' });
+  }
+});
+
+// New route to get user's goals
+app.get('/api/goals', authenticateToken, async (req, res) => {
+  try {
+    const userId = req.user.uid;
+    const db = admin.firestore();
+    const goalsRef = db.collection('users').doc(userId).collection('goals');
+    const snapshot = await goalsRef.get();
+    
+    if (snapshot.empty) {
+      return res.status(200).json({ message: 'No goals found for this user.' });
+    }
+    
+    const goals = [];
+    snapshot.forEach(doc => {
+      goals.push({ id: doc.id, ...doc.data() });
+    });
+    
+    res.status(200).json(goals);
+  } catch (error) {
+    console.error('Error fetching goals:', error);
+    res.status(500).json({ error: 'Failed to fetch goals' });
+  }
+});
+
+// New route to send goal reminders
+app.post('/api/send-goal-reminders', authenticateToken, async (req, res) => {
+  try {
+    const userId = req.user.uid;
+    const userEmail = req.user.email; // Assuming user's email is in the token
+    const db = admin.firestore();
+    const goalsRef = db.collection('users').doc(userId).collection('goals');
+    const snapshot = await goalsRef.get();
+    
+    let emailHtml = '<h1>Your Goal Status</h1>';
+    if (snapshot.empty) {
+      emailHtml += '<p>You have no pending goals at the moment.</p>';
+    } else {
+      emailHtml += '<ul>';
+      snapshot.forEach(doc => {
+        const goal = doc.data();
+        emailHtml += `<li>${goal.title}: ${goal.completed ? 'Completed' : 'Pending'}</li>`;
+      });
+      emailHtml += '</ul>';
+    }
+
+    // Send email using the email server
+    await axios.post('http://localhost:3003/send-reminder', {
+      to: userEmail,
+      subject: 'Your Goal Status Reminder',
+      html: emailHtml,
+    });
+    
+    res.status(200).json({ message: 'Reminder email sent successfully' });
+  } catch (error) {
+    console.error('Error sending goal reminders:', error);
+    res.status(500).json({ error: 'Failed to send reminder email' });
   }
 });
 

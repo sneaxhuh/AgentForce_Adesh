@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useAppContext, WeeklyGoal } from '../contexts/AppContext';
 import { generateProgressNudge } from '../services/aiService';
+import { doc, setDoc } from 'firebase/firestore';
+import { db } from '../firebase';
 
 import {
   Calendar,
@@ -13,21 +15,21 @@ import {
   Trash2,
   MessageCircle,
   Mail,
-  RefreshCw
+  RefreshCw,
+  Save
 } from 'lucide-react';
 
 
 const ProgressPage: React.FC = () => {
-  const { userProfile, weeklyGoals, setWeeklyGoals, semesterPlans } = useAppContext();
+  const { userProfile, setUserProfile, weeklyGoals, setWeeklyGoals, semesterPlans } = useAppContext();
   const [newGoalTitle, setNewGoalTitle] = useState('');
   const [newGoalDueDate, setNewGoalDueDate] = useState('');
   const [isAddingGoal, setIsAddingGoal] = useState(false);
   const [motivationMessage, setMotivationMessage] = useState('');
   const [isLoadingMotivation, setIsLoadingMotivation] = useState(false);
-  const [emailReminders, setEmailReminders] = useState(() => {
-    const savedReminders = localStorage.getItem('academicPlanner_emailReminders');
-    return savedReminders ? JSON.parse(savedReminders) : false;
-  });
+  const [emailReminders, setEmailReminders] = useState(userProfile.emailRemindersEnabled || false);
+  const [recipientEmail, setRecipientEmail] = useState(userProfile.reminderEmail || '');
+  const [isSavingEmail, setIsSavingEmail] = useState(false);
 
   const getMotivation = async () => {
     setIsLoadingMotivation(true);
@@ -46,11 +48,8 @@ const ProgressPage: React.FC = () => {
   const completionPercentage = weeklyGoals.length > 0 ? (completedGoalsCount / weeklyGoals.length) * 100 : 0;
 
   useEffect(() => {
-    localStorage.setItem('academicPlanner_emailReminders', JSON.stringify(emailReminders));
-  }, [emailReminders]);
-
-  useEffect(() => {
-    if (emailReminders) {
+    // Send weekly reminder email if enabled and email is set
+    if (emailReminders && (recipientEmail || userProfile.reminderEmail)) {
       const lastReminderSent = localStorage.getItem('academicPlanner_lastEmailReminderSent');
       const today = new Date().getTime();
       const oneWeek = 7 * 24 * 60 * 60 * 1000; // One week in milliseconds
@@ -88,6 +87,7 @@ const ProgressPage: React.FC = () => {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
+            to: recipientEmail || userProfile.reminderEmail,
             subject: emailSubject,
             text: emailText,
             html: emailHtml,
@@ -107,7 +107,7 @@ const ProgressPage: React.FC = () => {
         });
       }
     }
-  }, [emailReminders, weeklyGoals, completionPercentage]);
+  }, [emailReminders, weeklyGoals, completionPercentage, recipientEmail, userProfile.reminderEmail]);
 
   const addGoal = () => {
     if (newGoalTitle.trim() && newGoalDueDate) {
@@ -341,11 +341,57 @@ const ProgressPage: React.FC = () => {
           <div className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm">
             <div className="flex items-center space-x-3 mb-4">
               <Mail className="text-green-600" size={24} />
-              <h3 className="text-lg font-bold text-gray-900 dark:text-white">Reminders</h3>
+              <h3 className="text-lg font-bold text-gray-900 dark:text-white">Email Reminders</h3>
             </div>
 
             <div className="space-y-4">
-              <div className="flex items-center justify-between">
+              <div>
+                <label htmlFor="reminderEmail" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  Email Address
+                </label>
+                <div className="flex space-x-2">
+                  <input
+                    type="email"
+                    id="reminderEmail"
+                    value={recipientEmail}
+                    onChange={(e) => setRecipientEmail(e.target.value)}
+                    placeholder="your.email@example.com"
+                    className="flex-1 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                  />
+                  <button
+                    onClick={async () => {
+                      if (!recipientEmail) {
+                        alert('Please enter a valid email address.');
+                        return;
+                      }
+                      
+                      setIsSavingEmail(true);
+                      try {
+                        // Save email to user profile in Firebase
+                        const updatedProfile = {
+                          ...userProfile,
+                          reminderEmail: recipientEmail,
+                          emailRemindersEnabled: emailReminders
+                        };
+                        await setUserProfile(updatedProfile);
+                        alert('Email address saved successfully!');
+                      } catch (error) {
+                        console.error('Failed to save email address:', error);
+                        alert('Failed to save email address. Please try again.');
+                      } finally {
+                        setIsSavingEmail(false);
+                      }
+                    }}
+                    disabled={isSavingEmail}
+                    className="flex items-center px-3 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50"
+                  >
+                    <Save size={16} className="mr-1" />
+                    <span>{isSavingEmail ? 'Saving...' : 'Save'}</span>
+                  </button>
+                </div>
+              </div>
+              
+              <div className="flex items-center justify-between pt-2">
                 <div>
                   <p className="text-sm font-medium text-gray-900 dark:text-white">Weekly Email Reminders</p>
                   <p className="text-xs text-gray-500 dark:text-gray-400">Get progress updates via email</p>
@@ -354,28 +400,43 @@ const ProgressPage: React.FC = () => {
                   onClick={async () => {
                     const newEmailReminders = !emailReminders;
                     setEmailReminders(newEmailReminders);
-
-                    if (newEmailReminders) {
-                      // Send initial registration email or confirmation
-                      try {
-                        await fetch('http://localhost:3003/send-reminder', {
-                          method: 'POST',
-                          headers: { 'Content-Type': 'application/json' },
-                          body: JSON.stringify({
-                            subject: 'Academic Planner: Reminders Enabled',
-                            text: 'You have successfully enabled weekly progress reminders.',
-                            html: '<b>You have successfully enabled weekly progress reminders.</b>',
-                          }),
-                        });
-                        alert('Weekly email reminders enabled! Check your inbox.');
-                      } catch (error) {
-                        console.error('Failed to send confirmation email:', error);
-                        alert('Failed to enable reminders. Please try again.');
-                        setEmailReminders(false); // Revert toggle on error
+                    
+                    // Update Firebase with the new setting
+                    try {
+                      const updatedProfile = {
+                        ...userProfile,
+                        emailRemindersEnabled: newEmailReminders,
+                        reminderEmail: recipientEmail || userProfile.reminderEmail
+                      };
+                      await setUserProfile(updatedProfile);
+                      
+                      if (newEmailReminders) {
+                        // Send initial registration email or confirmation
+                        try {
+                          await fetch('http://localhost:3003/send-reminder', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                              to: recipientEmail || userProfile.reminderEmail,
+                              subject: 'Academic Planner: Reminders Enabled',
+                              text: 'You have successfully enabled weekly progress reminders.',
+                              html: '<b>You have successfully enabled weekly progress reminders.</b>',
+                            }),
+                          });
+                          alert('Weekly email reminders enabled! Check your inbox.');
+                        } catch (error) {
+                          console.error('Failed to send confirmation email:', error);
+                          alert('Failed to enable reminders. Please try again.');
+                          setEmailReminders(false); // Revert toggle on error
+                        }
+                      } else {
+                        // Optionally, send a deactivation email or just confirm locally
+                        alert('Weekly email reminders disabled.');
                       }
-                    } else {
-                      // Optionally, send a deactivation email or just confirm locally
-                      alert('Weekly email reminders disabled.');
+                    } catch (error) {
+                      console.error('Failed to update email reminder settings:', error);
+                      alert('Failed to update settings. Please try again.');
+                      setEmailReminders(!newEmailReminders); // Revert toggle on error
                     }
                   }}
                   className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${ 
@@ -389,7 +450,6 @@ const ProgressPage: React.FC = () => {
                   />
                 </button>
               </div>
-              
             </div>
           </div>
 
