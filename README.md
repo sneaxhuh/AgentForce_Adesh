@@ -12,14 +12,38 @@ A smart semester and career planning assistant powered by AI.
 
 ## Tech Stack
 
-- **Frontend**: React, TypeScript, Vite, Tailwind CSS
-- **Backend**: Node.js, Express.js
+- **Frontend**: React, TypeScript, Vite, Tailwind CSS, Recharts, Framer Motion, html2canvas
+- **Backend**: Node.js, Express.js, Axios
 - **Database**: Firebase Firestore
 - **Authentication**: Firebase Auth
 - **AI**: Google Gemini API
 - **Email**: Nodemailer with Gmail
 
-## Prerequisites
+## Project Structure
+
+```
+/
+├── api/                # Serverless functions for Vercel deployment
+├── public/             # Static assets
+├── src/
+│   ├── assets/         # Images and other assets
+│   ├── components/     # React components
+│   ├── contexts/       # React context providers
+│   ├── hooks/          # Custom React hooks
+│   ├── pages/          # Application pages
+│   ├── services/       # Services for interacting with APIs
+│   ├── styles/         # CSS and other styling files
+│   └── App.tsx         # Main application component
+├── .env                # Environment variables for local development
+├── .env.production     # Environment variables for production
+├── vercel.json         # Vercel deployment configuration
+├── package.json        # Project dependencies and scripts
+└── README.md           # This file
+```
+
+## Getting Started
+
+### Prerequisites
 
 - Node.js (v16 or higher)
 - npm or yarn
@@ -27,72 +51,90 @@ A smart semester and career planning assistant powered by AI.
 - Google Gemini API key
 - Gmail account with App Password
 
-## Setup
+### Installation
 
-1. Clone the repository
-2. Install dependencies:
-   ```bash
-   npm install
-   ```
+1.  Clone the repository:
 
-3. Create a `.env` file in the root directory with the following variables:
-   ```
-   GEMINI_API_KEY=your_gemini_api_key
-   GMAIL_USER=your_gmail_address@gmail.com
-   GMAIL_APP_PASSWORD=your_app_password
-   ```
+    ```bash
+    git clone https://github.com/your-username/academic-planner-ai.git
+    ```
 
-4. Add your Firebase service account key as `serviceAccountKey.json` in the root directory
+2.  Install the dependencies:
 
-5. Run the development servers:
-   ```bash
-   # Terminal 1: Frontend
-   npm run dev
-   
-   # Terminal 2: Main API server
-   node server.cjs
-   
-   # Terminal 3: Email server
-   node emailServer.js
-   ```
+    ```bash
+    npm install
+    ```
+
+3.  Create a `.env` file in the root directory and add the following environment variables:
+
+    ```
+    GEMINI_API_KEY=your_gemini_api_key
+    GMAIL_USER=your_gmail_address@gmail.com
+    GMAIL_APP_PASSWORD=your_app_password
+    ```
+
+4.  Create a `serviceAccountKey.json` file in the root directory with your Firebase service account credentials.
+
+5.  Run the development servers:
+
+    ```bash
+    # Terminal 1: Frontend
+    npm run dev
+
+    # Terminal 2: Main API server
+    node server.cjs
+
+    # Terminal 3: Email server
+    node emailServer.js
+    ```
+
+## API Endpoints
+
+The backend is composed of two Express servers:
+
+### Main API Server (`server.cjs`)
+
+-   **`POST /api/ai`**: Generates content using the Gemini API. (Protected)
+-   **`GET /api/goals`**: Fetches the user's goals from Firestore. (Protected)
+-   **`POST /api/send-goal-reminders`**: Sends goal reminders to the user's email. (Protected)
+
+### Email Server (`emailServer.js`)
+
+-   **`POST /send-reminder`**: Sends an email using Nodemailer.
+
+## Context Providers
+
+### `AuthContext`
+
+-   Manages user authentication state using Firebase Authentication.
+-   Provides the `user`, `token`, `isAuthenticated`, and `loading` state.
+
+### `AppContext`
+
+-   Manages the main application state.
+-   Provides the `userProfile`, `semesterPlans`, `weeklyGoals`, and `notes` state.
+-   Fetches and updates data in Firestore.
 
 ## Deployment
 
-Detailed deployment instructions can be found in [DEPLOYMENT.md](DEPLOYMENT.md).
+This project is configured for deployment on Vercel. The `vercel.json` file contains the necessary configuration for the serverless functions and rewrites.
 
-### Frontend (Firebase Hosting)
-1. Install Firebase CLI: `npm install -g firebase-tools`
-2. Login: `firebase login`
-3. Initialize hosting: `firebase init hosting` (use `dist` as public directory)
-4. Build and deploy: `npm run build` then `firebase deploy`
+To deploy to Vercel, connect your Git repository to a new Vercel project. Vercel will automatically detect the `vercel.json` file and deploy the project accordingly.
 
-### Backend (Render)
-The backend consists of two services that can be deployed to Render:
-1. Main API server (server.cjs)
-2. Email server (emailServer.js)
+Make sure to set the following environment variables in your Vercel project settings:
 
-Follow the configuration in `render.json` for easy deployment.
+-   `GEMINI_API_KEY`
+-   `GMAIL_USER`
+-   `GMAIL_APP_PASSWORD`
+-   `serviceAccountKey.json` (as a secret file)
 
-## Environment Variables
+## Contributing
 
-### Development (.env)
-- `GEMINI_API_KEY` - Google Gemini API key
-- `GMAIL_USER` - Gmail address for sending emails
-- `GMAIL_APP_PASSWORD` - App password for Gmail (not your regular password)
+Contributions are welcome! Please follow these steps to contribute:
 
-### Production (.env.production)
-- `VITE_API_BASE_URL` - Deployed API server URL
-- `VITE_EMAIL_API_BASE_URL` - Deployed email server URL
-
-### Render Environment Variables
-- `GEMINI_API_KEY` - Google Gemini API key
-- `GMAIL_USER` - Gmail address for sending emails
-- `GMAIL_APP_PASSWORD` - App password for Gmail (not your regular password)
-- `serviceAccountBase64` - Base64 encoded Firebase service account key (for Render deployment)
-
-## Learn More
-
-- [Vite Documentation](https://vitejs.dev/guide/)
-- [React Documentation](https://react.dev/)
-- [Firebase Documentation](https://firebase.google.com/docs)
-- [Google Gemini API](https://ai.google.dev/)
+1.  Fork the repository.
+2.  Create a new branch (`git checkout -b feature/your-feature`).
+3.  Make your changes.
+4.  Commit your changes (`git commit -m 'Add some feature'`).
+5.  Push to the branch (`git push origin feature/your-feature`).
+6.  Open a pull request.

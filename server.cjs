@@ -26,10 +26,7 @@ const port = 3002;
 app.use(express.json());
 
 app.use(cors({
-  origin: [
-    'http://localhost:5173',        // local dev
-    'https://academic-planner-83ee8.web.app' // deployed frontend URL
-  ]
+  origin: '*' // Allow all origins for debugging
 }));
 
 // Paste your Gemini API key here
