@@ -1,14 +1,23 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAppContext } from '../contexts/AppContext';
+import { useAuth } from '../contexts/AuthContext'; // Import useAuth
 import { BookOpen, Target, Users, Clock, ChevronRight, GraduationCap, Lightbulb, Award } from 'lucide-react';
 import { motion } from 'framer-motion';
 
 const WelcomePage: React.FC = () => {
   const navigate = useNavigate();
   const { userProfile, setUserProfile } = useAppContext();
+  const { isAuthenticated, loading: authLoading } = useAuth(); // Get auth state
   const [currentStep, setCurrentStep] = useState(1);
   const [formData, setFormData] = useState(userProfile);
+
+  // Redirect if user is authenticated and has a profile
+  useEffect(() => {
+    if (!authLoading && isAuthenticated && userProfile.name) { // Assuming 'name' indicates a complete profile
+      navigate('/dashboard', { replace: true });
+    }
+  }, [authLoading, isAuthenticated, userProfile.name, navigate]);
 
   const interestOptions = [
     'Artificial Intelligence', 'Machine Learning', 'Web Development', 'Mobile Development',

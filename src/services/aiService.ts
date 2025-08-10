@@ -1,4 +1,6 @@
 import { UserProfile, SemesterPlan, Project, Note } from '../contexts/AppContext';
+import { auth } from '../firebase'; // Import Firebase auth
+import { getIdToken } from 'firebase/auth'; // Import getIdToken
 
 interface Course {
   title: string;
@@ -10,15 +12,28 @@ interface Course {
 }
 
 const callAIApi = async (prompt: string) => {
+  const user = auth.currentUser; // Get current Firebase user
+  let token: string | null = null;
+
+  if (user) {
+    token = await user.getIdToken(); // Get Firebase ID token
+  }
+
   const response = await fetch('http://localhost:3002/api/ai', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
+      'Authorization': `Bearer ${token}`, // Add Authorization header
     },
     body: JSON.stringify({ prompt }),
   });
 
   if (!response.ok) {
+    // Handle unauthorized or forbidden responses
+    if (response.status === 401 || response.status === 403) {
+      // You might want to trigger a logout here or redirect to login
+      throw new Error('Unauthorized or Forbidden: Please log in again.');
+    }
     throw new Error('Failed to generate AI content');
   }
 
@@ -26,16 +41,17 @@ const callAIApi = async (prompt: string) => {
   return data.text;
 };
 
+
 export const generateSemesterPlan = async (userData: UserProfile): Promise<SemesterPlan[]> => {
   let numSemesters: number;
   switch (userData.academicLevel) {
     case 'undergrad':
       numSemesters = 8; // 4 years * 2 semesters/year
       break;
-    case 'masters':
+    case 'high-school':
       numSemesters = 4; // 2 years * 2 semesters/year
       break;
-    case 'phd':
+    case 'postgrad':
       numSemesters = 10; // 5 years * 2 semesters/year (can vary, but a reasonable default)
       break;
     default:
@@ -185,7 +201,12 @@ export const generateProgressNudge = async (userData: UserProfile): Promise<stri
   return response;
 };
 
-export const generateCourseRecommendations = async (courseTitle: string, courseDescription?: string): Promise<{
+import { jsonrepair } from "jsonrepair"; // npm install jsonrepair
+
+export const generateCourseRecommendations = async (
+  courseTitle: string,
+  courseDescription?: string
+): Promise<{
   studyPlan: string;
   certifications: { title: string; platform: string; link: string }[];
   projectIdeas: { title: string; description: string }[];
@@ -194,28 +215,22 @@ export const generateCourseRecommendations = async (courseTitle: string, courseD
     Generate AI recommendations for the course titled "${courseTitle}"${courseDescription ? ` with the following description: "${courseDescription}"` : ``}.
     The output MUST be a valid JSON object. Do not include any other text or markdown.
     The object must have the following properties:
-    - "studyPlan": string (a suggested study plan for this course)
-    - "certifications": array of objects with "title" (string), "platform" (string), and "link" (string, provide actual, relevant, and functional links)
-    - "projectIdeas": array of objects with "title" (string) and "description" (string)
-
-    Example:
-    {
-      "studyPlan": "Week 1: Introduction to CS, Binary. Week 2: C Programming basics.",
-      "certifications": [
-        { "title": "Python for Everybody", "platform": "Coursera", "link": "https://www.coursera.org/specializations/python" }
-      ],
-      "projectIdeas": [
-        { "title": "Build a simple web server", "description": "Create a basic HTTP server." }
-      ]
-    }
+    - "studyPlan": string
+    - "certifications": array of { "title": string, "platform": string, "link": string }
+    - "projectIdeas": array of { "title": string, "description": string }
   `;
+
   const response = await callAIApi(prompt);
+
   try {
-    const jsonMatch = response.match(/```json\n([\s\S]*?)\n```/);
-    if (jsonMatch && jsonMatch[1]) {
-      return JSON.parse(jsonMatch[1]);
-    }
-    return JSON.parse(response);
+    // Extract anything that looks like JSON
+    const match = response.match(/\{[\s\S]*\}/);
+    if (!match) throw new Error("No JSON found in response");
+
+    // Repair malformed JSON (removes trailing commas, fixes quotes, etc.)
+    const cleaned = jsonrepair(match[0]);
+
+    return JSON.parse(cleaned);
   } catch (error) {
     console.error("Failed to parse course recommendations response:", response);
     throw error;

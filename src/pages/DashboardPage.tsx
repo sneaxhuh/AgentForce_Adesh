@@ -39,15 +39,19 @@ const DashboardPage: React.FC = () => {
     localStorage.setItem('progressSummaryLastShown', new Date().getTime().toString());
   };
 
+  const [error, setError] = useState<string | null>(null);
+
   const generatePlan = useCallback(async () => {
     if (!userProfile.name) return;
 
     setIsGenerating(true);
+    setError(null);
     try {
       const plans = await generateSemesterPlan(userProfile);
       setSemesterPlans(plans);
     } catch (error) {
       console.error('Failed to generate plan:', error);
+      setError('Failed to generate your academic plan. Please try again later.');
     } finally {
       setIsGenerating(false);
     }
@@ -133,6 +137,21 @@ const DashboardPage: React.FC = () => {
           <span>{isGenerating ? 'Generating...' : 'Regenerate Plan'}</span>
         </button>
       </motion.div>
+
+      {/* Error Message */}
+      {error && (
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl p-4"
+        >
+          <div className="flex items-center space-x-2 text-red-600 dark:text-red-400">
+            <FileText size={20} />
+            <span className="font-medium">Error</span>
+          </div>
+          <p className="text-red-700 dark:text-red-300 mt-2">{error}</p>
+        </motion.div>
+      )}
 
       
 

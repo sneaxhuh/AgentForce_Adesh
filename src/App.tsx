@@ -1,6 +1,8 @@
-import React from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-import { AppProvider } from './contexts/AppContext';
+import React, { useEffect } from 'react'; // useEffect is needed at the top level
+import { BrowserRouter as Router, Routes, Route, Navigate, useNavigate } from 'react-router-dom'; // useNavigate is needed at the top level
+import { AppProvider, useAppContext } from './contexts/AppContext';
+import { AuthProvider, useAuth } from './contexts/AuthContext';
+import ProtectedRoute from './components/ProtectedRoute';
 import Layout from './components/Layout';
 import WelcomePage from './pages/WelcomePage';
 import DashboardPage from './pages/DashboardPage';
@@ -9,23 +11,93 @@ import ProgressPage from './pages/ProgressPage';
 import NotesPage from './pages/NotesPage';
 import SettingsPage from './pages/SettingsPage';
 import CoursePage from './pages/CoursePage';
+import LoginPage from './pages/Auth/LoginPage';
 
+// This component will handle the conditional rendering and redirection logic
+function AppContent() {
+  const { isAuthenticated, loading: authLoading } = useAuth();
+  const { userProfile, appDataLoading } = useAppContext();
+
+  // Show a loading screen while authentication or app data is loading
+  if (authLoading || appDataLoading) {
+    return <div>Loading application...</div>; // You can replace this with a more sophisticated loading spinner
+  }
+
+  // Once loading is complete, render the actual routes
+  return (
+    <Routes>
+      {/* Public routes */}
+      <Route path="/" element={<WelcomePage />} />
+      <Route path="/login" element={<LoginPage />} />
+      <Route path="/register" element={<Navigate to="/login" replace />} /> {/* Redirect /register to /login */}
+      <Route path="/welcome" element={<WelcomePage />} /> {/* Explicitly define welcome route */}
+
+      {/* Protected Routes - these will only be accessible if isAuthenticated is true */}
+      <Route
+        path="/dashboard"
+        element={
+          <ProtectedRoute>
+            <Layout><DashboardPage /></Layout>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/project-details"
+        element={
+          <ProtectedRoute>
+            <Layout><ProjectDetailsPage /></Layout>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/progress"
+        element={
+          <ProtectedRoute>
+            <Layout><ProgressPage /></Layout>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/notes"
+        element={
+          <ProtectedRoute>
+            <Layout><NotesPage /></Layout>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/settings"
+        element={
+          <ProtectedRoute>
+            <Layout><SettingsPage /></Layout>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/course"
+        element={
+          <ProtectedRoute>
+            <Layout><CoursePage /></Layout>
+          </ProtectedRoute>
+        }
+      />
+      {/* Fallback for any unmatched routes - redirects to dashboard if authenticated, otherwise to login */}
+      <Route path="*" element={isAuthenticated ? <Navigate to="/dashboard" replace /> : <Navigate to="/login" replace />} />
+    </Routes>
+  );
+}
+
+// The main App component that sets up the Router and Context Providers
 function App() {
   return (
-    <AppProvider>
-      <Router>
-        <Routes>
-          <Route path="/" element={<WelcomePage />} />
-          <Route path="/dashboard" element={<Layout><DashboardPage /></Layout>} />
-          <Route path="/project-details" element={<Layout><ProjectDetailsPage /></Layout>} />
-          <Route path="/progress" element={<Layout><ProgressPage /></Layout>} />
-          <Route path="/notes" element={<Layout><NotesPage /></Layout>} />
-          <Route path="/settings" element={<Layout><SettingsPage /></Layout>} />
-          <Route path="/course" element={<Layout><CoursePage /></Layout>} />
-          <Route path="*" element={<Navigate to="/" replace />} />
-        </Routes>
-      </Router>
-    </AppProvider>
+    <Router>
+      <AuthProvider>
+        <AppProvider>
+          {/* AppContent is rendered here, so it has access to all contexts and router */}
+          <AppContent />
+        </AppProvider>
+      </AuthProvider>
+    </Router>
   );
 }
 
